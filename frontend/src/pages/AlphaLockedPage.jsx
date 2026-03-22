@@ -25,11 +25,14 @@ export default function AlphaLockedPage({
   alphaChecking = false,
   onAlphaGranted,
 }) {
+  const isPrealpha = phase === 'prealpha'
+  const isAlpha = phase === 'alpha'
+  const [email, setEmail] = useState('')
   const [alphaKey, setAlphaKey] = useState('')
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const countdown = phase === 'prealpha'
+  const countdown = isPrealpha
     ? getCountdownTo(getAlphaStartMs(), nowMs)
     : getCountdownTo(getPublicStartMs(), nowMs)
 
@@ -37,7 +40,12 @@ export default function AlphaLockedPage({
     e.preventDefault()
     setError('')
     setNotice('')
+    const normalizedEmail = email.trim().toLowerCase()
     const key = alphaKey.trim()
+    if (!normalizedEmail) {
+      setError('Enter your invite email.')
+      return
+    }
     if (!key) {
       setError('Enter your alpha key.')
       return
@@ -45,15 +53,25 @@ export default function AlphaLockedPage({
 
     setWorking(true)
     try {
-      const data = await redeemAlphaKey(key)
+      const data = await redeemAlphaKey(key, normalizedEmail)
       if (data?.alpha_token) {
         setAlphaToken(data.alpha_token)
       }
-      if (!data?.access_granted) {
-        throw new Error('Key was processed but access was not granted.')
+      if (isPrealpha) {
+        if (data?.preregistered || data?.alpha_token) {
+          setNotice(`Key registered. Your access unlocks on ${ALPHA_START_AT_LABEL}.`)
+          setAlphaKey('')
+          return
+        }
+        throw new Error('Key was processed, but preregistration could not be confirmed.')
       }
-      setNotice('Access granted. Redirecting...')
-      if (typeof onAlphaGranted === 'function') onAlphaGranted()
+      if (isAlpha && data?.access_granted) {
+        setNotice('Access granted. Redirecting...')
+        setAlphaKey('')
+        if (typeof onAlphaGranted === 'function') onAlphaGranted()
+        return
+      }
+      throw new Error('Key was processed but access was not granted.')
     } catch (err) {
       setError(err.message || 'Unable to redeem alpha key.')
     } finally {
@@ -66,12 +84,12 @@ export default function AlphaLockedPage({
       <section className="max-w-3xl mx-auto pt-16 pb-14">
         <p className="text-cyan-200 uppercase tracking-[0.2em] text-[11px] font-bold">InkScout Alpha Lock</p>
         <h1 className="mt-3 text-4xl md:text-5xl font-extrabold text-white leading-tight">
-          {phase === 'prealpha' ? 'Hatch opens soon.' : 'Alpha access is live.'}
+          {isPrealpha ? 'Reserve your alpha access.' : 'Alpha access is live.'}
         </h1>
         <p className="mt-4 text-cyan-100/90 text-sm md:text-base max-w-2xl">
-          {phase === 'prealpha' ? (
+          {isPrealpha ? (
             <>
-              InkScout is temporarily locked while alpha prep finishes. Alpha access opens on
+              InkScout is locked while alpha prep finishes. You can register your key now, and access opens on
               {' '}<span className="font-bold text-white">{ALPHA_START_AT_LABEL}</span>.
             </>
           ) : (
@@ -89,13 +107,15 @@ export default function AlphaLockedPage({
           <CountCard label="Seconds" value={countdown.seconds} />
         </div>
 
-        {phase === 'alpha' && (
+        {(isPrealpha || isAlpha) && (
           <div className="ink-panel rounded-2xl p-5 mt-8 text-slate-700">
             <p className="font-bold text-[#0c3348]">Enter your alpha key</p>
             <p className="text-sm mt-2">
-              Redeem access using the key from your invite.
+              {isPrealpha
+                ? 'Register your invite key and email now so access is ready at launch.'
+                : 'Redeem access using the invite key and email you registered with.'}
             </p>
-            {alphaChecking && (
+            {isAlpha && alphaChecking && (
               <p className="text-xs mt-3 bg-cyan-50 border border-cyan-200 rounded-lg px-3 py-2 text-cyan-800">
                 Checking existing alpha access...
               </p>
@@ -110,18 +130,26 @@ export default function AlphaLockedPage({
                 {notice}
               </p>
             )}
-            <form className="mt-3 flex flex-col sm:flex-row gap-2" onSubmit={handleRedeem}>
+            <form className="mt-3 flex flex-col gap-2" onSubmit={handleRedeem}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Invite email"
+                className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                autoComplete="email"
+              />
               <input
                 type="text"
                 value={alphaKey}
                 onChange={(e) => setAlphaKey(e.target.value)}
                 placeholder="Enter alpha key"
-                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
                 autoComplete="off"
               />
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold disabled:opacity-60"
+                className="sm:self-start px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold disabled:opacity-60"
                 disabled={working}
               >
                 {working ? 'Checking...' : 'Unlock'}

@@ -164,8 +164,8 @@ export async function createCheckoutSession(payload) {
 export async function getAlphaStatus() {
   return request('GET', '/alpha/status')
 }
-export async function redeemAlphaKey(key) {
-  return request('POST', '/alpha/redeem', { key })
+export async function redeemAlphaKey(key, email) {
+  return request('POST', '/alpha/redeem', { key, email })
 }
 
 // Health / version
