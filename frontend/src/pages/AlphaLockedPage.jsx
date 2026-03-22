@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { redeemAlphaKey } from '../api.js'
-import { setAlphaToken } from '../alphaAccess.js'
 import { LEGAL_POLICY_META } from '../legal/policyMeta.js'
 import {
   ALPHA_START_AT_LABEL,
@@ -23,11 +23,12 @@ export default function AlphaLockedPage({
   phase,
   nowMs,
   alphaChecking = false,
+  isAuthenticated = false,
+  preregistered = false,
   onAlphaGranted,
 }) {
   const isPrealpha = phase === 'prealpha'
   const isAlpha = phase === 'alpha'
-  const [email, setEmail] = useState('')
   const [alphaKey, setAlphaKey] = useState('')
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
@@ -40,12 +41,7 @@ export default function AlphaLockedPage({
     e.preventDefault()
     setError('')
     setNotice('')
-    const normalizedEmail = email.trim().toLowerCase()
     const key = alphaKey.trim()
-    if (!normalizedEmail) {
-      setError('Enter your invite email.')
-      return
-    }
     if (!key) {
       setError('Enter your alpha key.')
       return
@@ -53,14 +49,12 @@ export default function AlphaLockedPage({
 
     setWorking(true)
     try {
-      const data = await redeemAlphaKey(key, normalizedEmail)
-      if (data?.alpha_token) {
-        setAlphaToken(data.alpha_token)
-      }
+      const data = await redeemAlphaKey(key)
       if (isPrealpha) {
-        if (data?.preregistered || data?.alpha_token) {
+        if (data?.preregistered) {
           setNotice(`Key registered. Your access unlocks on ${ALPHA_START_AT_LABEL}.`)
           setAlphaKey('')
+          if (typeof onAlphaGranted === 'function') onAlphaGranted()
           return
         }
         throw new Error('Key was processed, but preregistration could not be confirmed.')
@@ -107,14 +101,36 @@ export default function AlphaLockedPage({
           <CountCard label="Seconds" value={countdown.seconds} />
         </div>
 
-        {(isPrealpha || isAlpha) && (
+        {!isAuthenticated && (
+          <div className="ink-panel rounded-2xl p-5 mt-8 text-slate-700">
+            <p className="font-bold text-[#0c3348]">Sign in to manage alpha access</p>
+            <p className="text-sm mt-2">
+              Use your Supabase account first, then redeem your alpha key from this page.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link to="/login" className="px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold">
+                Log in
+              </Link>
+              <Link to="/signup" className="px-4 py-2 rounded-lg border border-cyan-300 text-cyan-800 hover:bg-cyan-50 font-semibold">
+                Create account
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {isAuthenticated && (isPrealpha || isAlpha) && (
           <div className="ink-panel rounded-2xl p-5 mt-8 text-slate-700">
             <p className="font-bold text-[#0c3348]">Enter your alpha key</p>
             <p className="text-sm mt-2">
               {isPrealpha
-                ? 'Register your invite key and email now so access is ready at launch.'
-                : 'Redeem access using the invite key and email you registered with.'}
+                ? 'Register your invite key now so access is ready at launch.'
+                : 'Redeem access using your invite key.'}
             </p>
+            {preregistered && (
+              <p className="text-xs mt-3 bg-emerald-100 border border-emerald-200 rounded-lg px-3 py-2 text-emerald-800">
+                This account is preregistered for alpha access.
+              </p>
+            )}
             {isAlpha && alphaChecking && (
               <p className="text-xs mt-3 bg-cyan-50 border border-cyan-200 rounded-lg px-3 py-2 text-cyan-800">
                 Checking existing alpha access...
@@ -131,14 +147,6 @@ export default function AlphaLockedPage({
               </p>
             )}
             <form className="mt-3 flex flex-col gap-2" onSubmit={handleRedeem}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Invite email"
-                className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                autoComplete="email"
-              />
               <input
                 type="text"
                 value={alphaKey}

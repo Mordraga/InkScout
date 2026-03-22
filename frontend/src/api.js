@@ -2,8 +2,7 @@
  * InkScout API client.
  */
 
-import { getApiUserId } from './userIdentity.js'
-import { getAlphaToken } from './alphaAccess.js'
+import { getApiAccessToken } from './userIdentity.js'
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'https://web-production-656fd.up.railway.app').replace(/\/$/, '')
 
@@ -11,11 +10,9 @@ async function request(method, path, body = null, timeoutMs = 10000) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const userId = getApiUserId()
-    const alphaToken = getAlphaToken()
+    const accessToken = getApiAccessToken()
     const headers = { 'Content-Type': 'application/json' }
-    if (userId) headers['X-User-ID'] = userId
-    if (alphaToken) headers['X-Alpha-Token'] = alphaToken
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`
 
     const res = await fetch(`${BASE_URL}${path}`, {
       method,
@@ -164,8 +161,8 @@ export async function createCheckoutSession(payload) {
 export async function getAlphaStatus() {
   return request('GET', '/alpha/status')
 }
-export async function redeemAlphaKey(key, email) {
-  return request('POST', '/alpha/redeem', { key, email })
+export async function redeemAlphaKey(key) {
+  return request('POST', '/alpha/redeem', { key })
 }
 
 // Health / version
