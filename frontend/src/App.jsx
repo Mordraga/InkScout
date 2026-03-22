@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { isLaunchLocked } from './launchGate.js'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import AlphaLockedPage from './pages/AlphaLockedPage.jsx'
 import AppPage from './pages/AppPage.jsx'
 import FaqPage from './pages/FaqPage.jsx'
 import HomePage from './pages/HomePage.jsx'
@@ -13,10 +15,23 @@ import PricingPage from './pages/PricingPage.jsx'
 import SignupPage from './pages/SignupPage.jsx'
 
 export default function App() {
+  const [nowMs, setNowMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const locked = isLaunchLocked(nowMs)
+
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {locked ? (
+            <Route path="*" element={<AlphaLockedPage nowMs={nowMs} />} />
+          ) : (
+            <>
           <Route path="/" element={<HomePage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/faq" element={<FaqPage />} />
@@ -34,6 +49,8 @@ export default function App() {
             )}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
+            </>
+          )}
         </Routes>
       </BrowserRouter>
     </AuthProvider>

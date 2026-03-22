@@ -51,6 +51,38 @@ body {
   animation: bubble-shift 22s linear infinite;
 }
 
+.marketing-bubbles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.marketing-bubbles__mist {
+  position: absolute;
+  inset: 0;
+  opacity: 0.34;
+  background:
+    radial-gradient(480px 320px at 8% 92%, rgba(182, 244, 255, 0.18), transparent 60%),
+    radial-gradient(420px 260px at 78% 86%, rgba(177, 230, 253, 0.16), transparent 62%),
+    radial-gradient(620px 360px at 52% 108%, rgba(216, 247, 255, 0.14), transparent 63%);
+  animation: bubble-mist 20s ease-in-out infinite;
+}
+
+.ink-bubble {
+  position: absolute;
+  bottom: -16vh;
+  border-radius: 999px;
+  border: 1px solid rgba(236, 250, 255, 0.58);
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.88) 0, rgba(255, 255, 255, 0.15) 45%, rgba(255, 255, 255, 0.05) 100%);
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.22), 0 0 18px rgba(177, 238, 255, 0.17);
+  will-change: transform, opacity;
+  animation-name: bubble-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 .ink-header {
   background: linear-gradient(110deg, rgba(2, 31, 49, 0.92), rgba(7, 72, 109, 0.95));
   border-bottom: 1px solid rgba(121, 211, 240, 0.25);
@@ -85,6 +117,30 @@ body {
   100% { transform: translateY(0); }
 }
 
+@keyframes bubble-rise {
+  0% {
+    transform: translate3d(calc(var(--bubble-drift) * -0.4), 0, 0) scale(0.9);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(var(--bubble-drift), -55vh, 0) scale(1);
+    opacity: 0.86;
+  }
+  100% {
+    transform: translate3d(calc(var(--bubble-drift) * -0.75), -118vh, 0) scale(1.14);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-mist {
+  0% { transform: translateY(0); opacity: 0.34; }
+  50% { transform: translateY(-10px); opacity: 0.44; }
+  100% { transform: translateY(0); opacity: 0.34; }
+}
+
 @keyframes swell-in {
   0% {
     opacity: 0;
@@ -102,5 +158,25 @@ body {
       radial-gradient(600px 340px at 10% -8%, rgba(120, 225, 243, 0.24), transparent 54%),
       radial-gradient(520px 320px at 95% -20%, rgba(133, 212, 245, 0.2), transparent 58%),
       linear-gradient(165deg, var(--ocean-deep) 0%, var(--ocean-mid) 56%, #259bb2 100%);
+  }
+
+  .marketing-bubbles__mist {
+    opacity: 0.25;
+  }
+
+  .ink-bubble {
+    opacity: 0.16 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root {
+    animation: none;
+  }
+
+  #root::before,
+  .ink-bubble,
+  .marketing-bubbles__mist {
+    animation: none;
   }
 }
