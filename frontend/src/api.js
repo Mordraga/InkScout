@@ -3,6 +3,7 @@
  */
 
 import { getApiUserId } from './userIdentity.js'
+import { getAlphaToken } from './alphaAccess.js'
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'https://web-production-656fd.up.railway.app').replace(/\/$/, '')
 
@@ -11,8 +12,10 @@ async function request(method, path, body = null, timeoutMs = 10000) {
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const userId = getApiUserId()
+    const alphaToken = getAlphaToken()
     const headers = { 'Content-Type': 'application/json' }
     if (userId) headers['X-User-ID'] = userId
+    if (alphaToken) headers['X-Alpha-Token'] = alphaToken
 
     const res = await fetch(`${BASE_URL}${path}`, {
       method,
@@ -155,6 +158,14 @@ export async function getEntitlements() {
 }
 export async function createCheckoutSession(payload) {
   return request('POST', '/billing/checkout-session', payload)
+}
+
+// Alpha access
+export async function getAlphaStatus() {
+  return request('GET', '/alpha/status')
+}
+export async function redeemAlphaKey(key) {
+  return request('POST', '/alpha/redeem', { key })
 }
 
 // Health / version

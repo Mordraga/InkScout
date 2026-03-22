@@ -2,3 +2,6 @@ frontend/node_modules/
 DEVLOG.md
 backend-ref/
 frontend/dist
+ALPHA_KEY_BACKEND_CONTRACT.md
+generate_alpha_keys.py
+DEPLOYMENT_CHECKLIST.md
