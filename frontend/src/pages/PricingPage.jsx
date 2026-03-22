@@ -4,10 +4,12 @@ import MarketingLayout from '../components/MarketingLayout.jsx'
 import { PLAN_DEFS, yearlyPrice } from '../planCatalog.js'
 import { createCheckoutSession, getEntitlements } from '../api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { LEGAL_POLICY_META } from '../legal/policyMeta.js'
 
 const BILLING_ENV_ENABLED = (import.meta.env.VITE_ENABLE_BILLING || '').toLowerCase() === 'true'
 
 export default function PricingPage() {
+  const meta = LEGAL_POLICY_META
   const [cadence, setCadence] = useState('monthly')
   const [workingPlan, setWorkingPlan] = useState('')
   const [error, setError] = useState('')
@@ -79,7 +81,8 @@ export default function PricingPage() {
         <p className="text-cyan-200 uppercase tracking-[0.18em] text-[11px] font-bold">Pricing</p>
         <h1 className="text-4xl font-extrabold text-white mt-2">Choose your scouting speed.</h1>
         <p className="text-cyan-100/90 mt-3 max-w-2xl">
-          Start free, then move to paid tiers as your outreach pipeline grows. Annual billing saves 20%.
+          Start free, then move to paid tiers as your outreach pipeline grows. Paid plans auto-renew through Stripe
+          until canceled. Annual billing saves 20%.
         </p>
 
         <div className="mt-6 inline-flex rounded-xl border border-cyan-200/25 overflow-hidden">
@@ -112,6 +115,11 @@ export default function PricingPage() {
             {error}
           </p>
         )}
+        <p className="mt-4 text-xs text-cyan-100/85 max-w-3xl">
+          Charges are final once processed, except verified system error, duplicate charge, or where required by law.
+          {' '}See <Link to="/legal/refund" className="text-cyan-200 hover:text-white underline underline-offset-2">Refund Policy</Link>
+          {' '}and <Link to="/legal/terms" className="text-cyan-200 hover:text-white underline underline-offset-2">Terms</Link>.
+        </p>
       </section>
 
       <section className="max-w-6xl mx-auto px-4 pb-16 grid md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -147,7 +155,8 @@ export default function PricingPage() {
         <div className="ink-panel rounded-2xl p-6">
           <h2 className="text-[#0c3348] text-xl font-bold">Need help selecting a plan?</h2>
           <p className="text-sm text-slate-600 mt-2">
-            Start on Free, then upgrade once you are consistently sourcing leads every week.
+            Start on Free, then upgrade once you are consistently sourcing leads every week. For policy questions,
+            contact <a href={meta.supportEmailMailto} className="text-cyan-700 hover:text-cyan-800">{meta.supportEmail}</a>.
           </p>
           <div className="mt-4">
             <Link to="/faq" className="text-cyan-700 font-semibold hover:text-cyan-800">Read the FAQ</Link>
