@@ -1,7 +1,8 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { patchLeadStatus } from '../api.js'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
-const MOOTSKEEPER_URL = 'https://mootskeeper.com/?handle={handle}'
+const MOOTSKEEPER_URL = (import.meta.env.VITE_MOOTSKEEPER_URL || 'https://mootskeeper.com').replace(/\/$/, '')
 
 const STATUS_LABELS = {
   uninteracted: 'Uninteracted',
@@ -13,6 +14,7 @@ const LABEL_TO_STATUS = Object.fromEntries(
 )
 
 export default function WorkspacePanel({ lead, onStatusChanged, onClose, profiles = [], entitlements = null }) {
+  const { session } = useAuth()
   const [current, setCurrent] = useState(lead)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +36,7 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
   const isActive = current.status === 'active'
   const profileObj = profiles.find(p => p.id === current.profile_id)
   const canUseMootskeeper = Boolean(entitlements?.features?.mootskeeper_integration)
+  const mootsToken = session?.access_token || ''
 
   async function handleStatusChange(label) {
     const newStatus = LABEL_TO_STATUS[label]
@@ -49,6 +52,13 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
     } finally {
       setSaving(false)
     }
+  }
+
+  function handleOpenMootskeeper() {
+    setError('')
+    const base = `${MOOTSKEEPER_URL}/?from=inkscout&handle=${encodeURIComponent(current.username)}`
+    const url = mootsToken ? `${base}#token=${mootsToken}&provider=inkscout` : base
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -104,14 +114,12 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
           Open Post
         </a>
         {isActive && canUseMootskeeper && (
-          <a
-            href={MOOTSKEEPER_URL.replace('{handle}', current.username)}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            onClick={handleOpenMootskeeper}
             className="text-sm bg-active-green hover:bg-[#245e4c] text-white px-4 py-2 rounded-lg font-semibold"
           >
             Add to MootsKeeper
-          </a>
+          </button>
         )}
       </div>
       {isActive && !canUseMootskeeper && (
@@ -158,5 +166,3 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
     </div>
   )
 }
-
-

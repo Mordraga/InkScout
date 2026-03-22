@@ -43,6 +43,7 @@
   - [frontend/.env.example](C:/Users/Allison/Github/InkScout/frontend/.env.example)
 - [ ] Ensure `VITE_API_URL` points to Railway backend.
 - [ ] Ensure `VITE_ENABLE_BILLING=true`.
+- [ ] Set `VITE_MOOTSKEEPER_URL` (default `https://mootskeeper.com`).
 - [ ] Verify routing rewrite works (`vercel.json` present):
   - `/` loads marketing site.
   - `/app` loads React app route.
