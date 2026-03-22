@@ -36,7 +36,9 @@ export default function AlphaLockedPage({
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [backendRequiresVerification, setBackendRequiresVerification] = useState(false)
   const needsEmailVerification = isAuthenticated && !emailVerified
+  const requiresVerification = needsEmailVerification || backendRequiresVerification
   const countdown = isPrealpha
     ? getCountdownTo(getAlphaStartMs(), nowMs)
     : getCountdownTo(getPublicStartMs(), nowMs)
@@ -53,10 +55,11 @@ export default function AlphaLockedPage({
 
     setWorking(true)
     try {
-      if (needsEmailVerification) {
+      if (requiresVerification) {
         throw new Error('Verify your account email before redeeming an alpha key.')
       }
       const data = await redeemAlphaKey(key)
+      setBackendRequiresVerification(false)
       if (isPrealpha) {
         if (data?.preregistered) {
           setNotice(`Key registered. Your access unlocks on ${ALPHA_START_AT_LABEL}.`)
@@ -74,7 +77,11 @@ export default function AlphaLockedPage({
       }
       throw new Error('Key was processed but access was not granted.')
     } catch (err) {
-      setError(err.message || 'Unable to redeem alpha key.')
+      const detail = err.message || 'Unable to redeem alpha key.'
+      if (detail.toLowerCase().includes('verify your account email')) {
+        setBackendRequiresVerification(true)
+      }
+      setError(detail)
     } finally {
       setWorking(false)
     }
@@ -174,7 +181,7 @@ export default function AlphaLockedPage({
                 </Link>
               </div>
             </div>
-            {needsEmailVerification && (
+            {requiresVerification && (
               <div className="mt-3 bg-amber-100 border border-amber-200 rounded-lg px-3 py-3 text-amber-900 text-xs">
                 <p className="font-semibold">Verify your email to continue</p>
                 <p className="mt-1">
@@ -234,7 +241,7 @@ export default function AlphaLockedPage({
               <button
                 type="submit"
                 className="sm:self-start px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold disabled:opacity-60"
-                disabled={working || needsEmailVerification}
+                disabled={working || requiresVerification}
               >
                 {working ? 'Checking...' : 'Unlock'}
               </button>
