@@ -157,6 +157,23 @@ export default function AlphaLockedPage({
                 ? 'Register your invite key now so access is ready at launch.'
                 : 'Redeem access using your invite key.'}
             </p>
+            <div className="mt-3 bg-slate-100 border border-slate-200 rounded-lg px-3 py-3 text-xs text-slate-700">
+              <p>
+                Signed in as <span className="font-semibold">{user?.email || 'unknown email'}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 font-semibold"
+                >
+                  Sign out
+                </button>
+                <Link to="/login" className="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 font-semibold">
+                  Switch account
+                </Link>
+              </div>
+            </div>
             {needsEmailVerification && (
               <div className="mt-3 bg-amber-100 border border-amber-200 rounded-lg px-3 py-3 text-amber-900 text-xs">
                 <p className="font-semibold">Verify your email to continue</p>
