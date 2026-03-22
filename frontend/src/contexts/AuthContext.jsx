@@ -36,10 +36,13 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const emailVerified = Boolean(user?.email_confirmed_at || user?.confirmed_at)
+
   const value = useMemo(() => ({
     supabaseConfigured,
     session,
     user,
+    emailVerified,
     loading,
     async signInWithPassword(email, password) {
       if (!supabase) throw new Error('Supabase is not configured.')
@@ -71,7 +74,21 @@ export function AuthProvider({ children }) {
       if (error) throw error
       setApiUserIdentity(null, null)
     },
-  }), [loading, session, user])
+    async resendVerificationEmail(email) {
+      if (!supabase) throw new Error('Supabase is not configured.')
+      const targetEmail = (email || user?.email || '').trim()
+      if (!targetEmail) throw new Error('No email address found for this account.')
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: targetEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      })
+      if (error) throw error
+      return true
+    },
+  }), [emailVerified, loading, session, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

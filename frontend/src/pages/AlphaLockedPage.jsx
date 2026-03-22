@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { redeemAlphaKey } from '../api.js'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { LEGAL_POLICY_META } from '../legal/policyMeta.js'
 import {
   ALPHA_START_AT_LABEL,
@@ -29,10 +30,13 @@ export default function AlphaLockedPage({
 }) {
   const isPrealpha = phase === 'prealpha'
   const isAlpha = phase === 'alpha'
+  const { user, emailVerified, resendVerificationEmail, signOut } = useAuth()
   const [alphaKey, setAlphaKey] = useState('')
   const [working, setWorking] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const needsEmailVerification = isAuthenticated && !emailVerified
   const countdown = isPrealpha
     ? getCountdownTo(getAlphaStartMs(), nowMs)
     : getCountdownTo(getPublicStartMs(), nowMs)
@@ -49,6 +53,9 @@ export default function AlphaLockedPage({
 
     setWorking(true)
     try {
+      if (needsEmailVerification) {
+        throw new Error('Verify your account email before redeeming an alpha key.')
+      }
       const data = await redeemAlphaKey(key)
       if (isPrealpha) {
         if (data?.preregistered) {
@@ -70,6 +77,30 @@ export default function AlphaLockedPage({
       setError(err.message || 'Unable to redeem alpha key.')
     } finally {
       setWorking(false)
+    }
+  }
+
+  async function handleResendVerification() {
+    setError('')
+    setNotice('')
+    setResending(true)
+    try {
+      await resendVerificationEmail(user?.email || '')
+      setNotice(`Verification email sent to ${user?.email || 'your inbox'}.`)
+    } catch (err) {
+      setError(err.message || 'Unable to resend verification email.')
+    } finally {
+      setResending(false)
+    }
+  }
+
+  async function handleSignOut() {
+    setError('')
+    setNotice('')
+    try {
+      await signOut()
+    } catch (err) {
+      setError(err.message || 'Unable to sign out.')
     }
   }
 
@@ -126,6 +157,34 @@ export default function AlphaLockedPage({
                 ? 'Register your invite key now so access is ready at launch.'
                 : 'Redeem access using your invite key.'}
             </p>
+            {needsEmailVerification && (
+              <div className="mt-3 bg-amber-100 border border-amber-200 rounded-lg px-3 py-3 text-amber-900 text-xs">
+                <p className="font-semibold">Verify your email to continue</p>
+                <p className="mt-1">
+                  This account is signed in as <span className="font-semibold">{user?.email || 'unknown email'}</span>, but email verification is still pending.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                    className="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-semibold disabled:opacity-60"
+                  >
+                    {resending ? 'Sending...' : 'Resend verification email'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="px-3 py-2 rounded-lg border border-amber-400 hover:bg-amber-50 font-semibold"
+                  >
+                    Sign out
+                  </button>
+                  <Link to="/login" className="px-3 py-2 rounded-lg border border-amber-400 hover:bg-amber-50 font-semibold">
+                    Go to login
+                  </Link>
+                </div>
+              </div>
+            )}
             {preregistered && (
               <p className="text-xs mt-3 bg-emerald-100 border border-emerald-200 rounded-lg px-3 py-2 text-emerald-800">
                 This account is preregistered for alpha access.
@@ -158,7 +217,7 @@ export default function AlphaLockedPage({
               <button
                 type="submit"
                 className="sm:self-start px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold disabled:opacity-60"
-                disabled={working}
+                disabled={working || needsEmailVerification}
               >
                 {working ? 'Checking...' : 'Unlock'}
               </button>
