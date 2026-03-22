@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { patchLeadStatus } from '../api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { supabase } from '../supabase.js'
 
 const MOOTSKEEPER_URL = (import.meta.env.VITE_MOOTSKEEPER_URL || 'https://mootskeeper.com').replace(/\/$/, '')
 
@@ -36,7 +37,6 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
   const isActive = current.status === 'active'
   const profileObj = profiles.find(p => p.id === current.profile_id)
   const canUseMootskeeper = Boolean(entitlements?.features?.mootskeeper_integration)
-  const mootsToken = session?.access_token || ''
 
   async function handleStatusChange(label) {
     const newStatus = LABEL_TO_STATUS[label]
@@ -54,8 +54,23 @@ export default function WorkspacePanel({ lead, onStatusChanged, onClose, profile
     }
   }
 
-  function handleOpenMootskeeper() {
+  async function handleOpenMootskeeper() {
     setError('')
+    let mootsToken = session?.access_token || ''
+    try {
+      if (supabase) {
+        const expiresAtMs = (session?.expires_at || 0) * 1000
+        const tokenNearExpiry = !mootsToken || (expiresAtMs > 0 && expiresAtMs - Date.now() < 60_000)
+        if (tokenNearExpiry) {
+          const { data, error: sessionError } = await supabase.auth.getSession()
+          if (sessionError) throw sessionError
+          mootsToken = data?.session?.access_token || mootsToken
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh Supabase session before MootsKeeper redirect:', e)
+    }
+
     const base = `${MOOTSKEEPER_URL}/?from=inkscout&handle=${encodeURIComponent(current.username)}`
     const url = mootsToken ? `${base}#token=${mootsToken}&provider=inkscout` : base
     window.open(url, '_blank', 'noopener,noreferrer')
