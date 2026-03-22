@@ -5,3 +5,5 @@ frontend/dist
 ALPHA_KEY_BACKEND_CONTRACT.md
 generate_alpha_keys.py
 DEPLOYMENT_CHECKLIST.md
+alpha_keys.json
+alpha_keys.txt
