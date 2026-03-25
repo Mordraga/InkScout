@@ -1,8 +1,34 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getPublicStats } from '../api.js'
 import MarketingLayout from '../components/MarketingLayout.jsx'
 
 export default function HomePage() {
+  const [signupCount, setSignupCount] = useState(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadStats() {
+      try {
+        const data = await getPublicStats()
+        if (!active) return
+        const count = Number(data?.signup_count)
+        setSignupCount(Number.isFinite(count) ? count : null)
+      } catch {
+        if (!active) return
+        setSignupCount(null)
+      }
+    }
+
+    loadStats()
+    return () => { active = false }
+  }, [])
+
+  const formattedSignupCount = signupCount === null
+    ? null
+    : new Intl.NumberFormat('en-US').format(signupCount)
+
   return (
     <MarketingLayout>
       <section className="max-w-6xl mx-auto px-4 pt-16 pb-14">
@@ -23,6 +49,17 @@ export default function HomePage() {
                 View Plans
               </Link>
             </div>
+            {formattedSignupCount !== null && (
+              <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-cyan-300/25 bg-slate-950/25 px-4 py-3 backdrop-blur">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-200/80 font-bold">Live Signup Count</p>
+                  <p className="mt-1 text-sm text-cyan-50">
+                    <span className="text-xl font-extrabold text-white">{formattedSignupCount}</span>{' '}
+                    artists have signed up so far.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="ink-panel rounded-2xl p-4 text-slate-700">

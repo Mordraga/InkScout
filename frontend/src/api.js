@@ -177,3 +177,7 @@ export async function checkHealth() {
 export async function getVersion() {
   return request('GET', '/version')
 }
+
+export async function getPublicStats() {
+  return request('GET', '/public/stats')
+}
