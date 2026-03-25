@@ -163,31 +163,32 @@ export default function AlphaLockedPage({
           <CountCard label="Seconds" value={countdown.seconds} />
         </div>
 
-        {formattedSignupCount !== null && (
-          <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-cyan-300/25 bg-slate-950/25 px-4 py-3 backdrop-blur">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-200/80 font-bold">Artists Signed Up</p>
-              <p className="mt-1 text-sm text-cyan-50">
-                <span className="text-xl font-extrabold text-white">{formattedSignupCount}</span>{' '}
-                creators are already in line for access.
-              </p>
-            </div>
-          </div>
-        )}
-
         {!isAuthenticated && (
           <div className="ink-panel rounded-2xl p-5 mt-8 text-slate-700">
-            <p className="font-bold text-[#0c3348]">Sign in to manage alpha access</p>
-            <p className="text-sm mt-2">
-              Use your Supabase account first, then redeem your alpha key from this page.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link to="/login" className="px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold">
-                Log in
-              </Link>
-              <Link to="/signup" className="px-4 py-2 rounded-lg border border-cyan-300 text-cyan-800 hover:bg-cyan-50 font-semibold">
-                Create account
-              </Link>
+            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-xl">
+                <p className="font-bold text-[#0c3348]">Sign in to manage alpha access</p>
+                <p className="text-sm mt-2">
+                  Use your Supabase account first, then redeem your alpha key from this page.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link to="/login" className="px-4 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 text-white font-semibold">
+                    Log in
+                  </Link>
+                  <Link to="/signup" className="px-4 py-2 rounded-lg border border-cyan-300 text-cyan-800 hover:bg-cyan-50 font-semibold">
+                    Create account
+                  </Link>
+                </div>
+              </div>
+              {formattedSignupCount !== null && (
+                <div className="md:text-right md:min-w-[220px]">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-700/80 font-bold">Artists Signed Up</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    <span className="text-2xl font-extrabold text-[#0c3348]">{formattedSignupCount}</span>{' '}
+                    creators are already in line for access.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
