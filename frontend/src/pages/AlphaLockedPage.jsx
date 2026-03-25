@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { redeemAlphaKey } from '../api.js'
+import { getPublicStats, redeemAlphaKey } from '../api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { LEGAL_POLICY_META } from '../legal/policyMeta.js'
 import {
@@ -37,11 +37,35 @@ export default function AlphaLockedPage({
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [backendRequiresVerification, setBackendRequiresVerification] = useState(false)
+  const [signupCount, setSignupCount] = useState(null)
   const needsEmailVerification = isAuthenticated && !emailVerified
   const requiresVerification = needsEmailVerification || backendRequiresVerification
   const countdown = isPrealpha
     ? getCountdownTo(getAlphaStartMs(), nowMs)
     : getCountdownTo(getPublicStartMs(), nowMs)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadStats() {
+      try {
+        const data = await getPublicStats()
+        if (!active) return
+        const count = Number(data?.signup_count)
+        setSignupCount(Number.isFinite(count) ? count : null)
+      } catch {
+        if (!active) return
+        setSignupCount(null)
+      }
+    }
+
+    loadStats()
+    return () => { active = false }
+  }, [])
+
+  const formattedSignupCount = signupCount === null
+    ? null
+    : new Intl.NumberFormat('en-US').format(signupCount)
 
   async function handleRedeem(e) {
     e.preventDefault()
@@ -138,6 +162,18 @@ export default function AlphaLockedPage({
           <CountCard label="Minutes" value={countdown.minutes} />
           <CountCard label="Seconds" value={countdown.seconds} />
         </div>
+
+        {formattedSignupCount !== null && (
+          <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-cyan-300/25 bg-slate-950/25 px-4 py-3 backdrop-blur">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-200/80 font-bold">Artists Signed Up</p>
+              <p className="mt-1 text-sm text-cyan-50">
+                <span className="text-xl font-extrabold text-white">{formattedSignupCount}</span>{' '}
+                creators are already in line for access.
+              </p>
+            </div>
+          </div>
+        )}
 
         {!isAuthenticated && (
           <div className="ink-panel rounded-2xl p-5 mt-8 text-slate-700">
