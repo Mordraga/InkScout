@@ -30,7 +30,7 @@ export default function AlphaLockedPage({
 }) {
   const isPrealpha = phase === 'prealpha'
   const isAlpha = phase === 'alpha'
-  const { user, emailVerified, resendVerificationEmail, signOut } = useAuth()
+  const { user, emailVerified, refreshAuthState, resendVerificationEmail, signOut } = useAuth()
   const [alphaKey, setAlphaKey] = useState('')
   const [working, setWorking] = useState(false)
   const [resending, setResending] = useState(false)
@@ -63,6 +63,12 @@ export default function AlphaLockedPage({
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    if (emailVerified) {
+      setBackendRequiresVerification(false)
+    }
+  }, [emailVerified])
+
   const formattedSignupCount = signupCount === null
     ? null
     : new Intl.NumberFormat('en-US').format(signupCount)
@@ -79,7 +85,8 @@ export default function AlphaLockedPage({
 
     setWorking(true)
     try {
-      if (requiresVerification) {
+      const authState = await refreshAuthState(true)
+      if (!authState?.emailVerified) {
         throw new Error('Verify your account email before redeeming an alpha key.')
       }
       const data = await redeemAlphaKey(key)
