@@ -15,8 +15,20 @@ import LoginPage from './pages/LoginPage.jsx'
 import PricingPage from './pages/PricingPage.jsx'
 import SignupPage from './pages/SignupPage.jsx'
 
-function FullSiteRoutes() {
-  return (
+function AppRoutes() {
+  const { user, loading } = useAuth()
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [alphaAccessGranted, setAlphaAccessGranted] = useState(false)
+  const [alphaPreregistered, setAlphaPreregistered] = useState(false)
+  const [alphaChecking, setAlphaChecking] = useState(false)
+
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const phase = getLaunchPhase(nowMs)
+  const fullSiteRoutes = (
     <>
       <Route path="/" element={<HomePage />} />
       <Route path="/pricing" element={<PricingPage />} />
@@ -37,21 +49,6 @@ function FullSiteRoutes() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </>
   )
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth()
-  const [nowMs, setNowMs] = useState(() => Date.now())
-  const [alphaAccessGranted, setAlphaAccessGranted] = useState(false)
-  const [alphaPreregistered, setAlphaPreregistered] = useState(false)
-  const [alphaChecking, setAlphaChecking] = useState(false)
-
-  useEffect(() => {
-    const id = setInterval(() => setNowMs(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const phase = getLaunchPhase(nowMs)
 
   useEffect(() => {
     let active = true
@@ -99,7 +96,7 @@ function AppRoutes() {
   return (
     <Routes>
       {gateOpen ? (
-        <FullSiteRoutes />
+        fullSiteRoutes
       ) : (
         <>
           <Route path="/login" element={<LoginPage />} />
