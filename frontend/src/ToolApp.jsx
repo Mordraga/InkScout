@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import ProfilesPanel from './views/ProfilesPanel.jsx'
 import LeadsPanel from './views/LeadsPanel.jsx'
 import WorkspacePanel from './views/WorkspacePanel.jsx'
-import ConsoleDrawer from './views/ConsoleDrawer.jsx'
 import SettingsModal from './views/SettingsModal.jsx'
 import KeywordsModal from './views/KeywordsModal.jsx'
 import KeywordsPoolModal from './views/KeywordsPoolModal.jsx'
@@ -10,13 +9,12 @@ import BlacklistModal from './views/BlacklistModal.jsx'
 import SynonymsModal from './views/SynonymsModal.jsx'
 import { getProfiles } from './api.js'
 
-const TABS = ['Profiles', 'Leads', 'Workspace', 'Console']
+const TABS = ['Profiles', 'Leads', 'Workspace']
 
 const TAB_ICONS = {
   Profiles: '\uD83D\uDC19',
   Leads: '\uD83C\uDF0A',
   Workspace: '\uD83E\uDD91',
-  Console: '\uD83D\uDCE1',
 }
 
 function titleCase(plan) {
@@ -35,7 +33,6 @@ export default function ToolApp({
   const [keywordsPoolOpen, setKeywordsPoolOpen] = useState(false)
   const [blacklistOpen, setBlacklistOpen] = useState(false)
   const [synonymsOpen, setSynonymsOpen] = useState(false)
-  const [consoleOpen, setConsoleOpen] = useState(false)
   const [leadsRefreshSignal, setLeadsRefreshSignal] = useState(0)
   const [profiles, setProfiles] = useState([])
   const [keywordsModalProfile, setKeywordsModalProfile] = useState(null)
@@ -146,10 +143,6 @@ export default function ToolApp({
         </div>
       </div>
 
-      <div className="hidden lg:block shrink-0">
-        <ConsoleDrawer open={consoleOpen} onToggle={() => setConsoleOpen((o) => !o)} />
-      </div>
-
       <div className="flex lg:hidden flex-1 min-h-0 overflow-hidden">
         <div className={activeTab === 'Profiles' ? 'flex flex-col flex-1 p-3' : 'hidden'}>
           <ProfilesPanel
@@ -172,9 +165,6 @@ export default function ToolApp({
             profiles={profiles}
             entitlements={entitlements}
           />
-        </div>
-        <div className={activeTab === 'Console' ? 'flex flex-col flex-1 bg-console' : 'hidden'}>
-          <ConsoleDrawer open={true} onToggle={() => setActiveTab('Leads')} />
         </div>
       </div>
 
