@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ToolApp from '../ToolApp.jsx'
 import { createCheckoutSession, getEntitlements } from '../api.js'
@@ -23,7 +23,6 @@ const DEFAULT_ENTITLEMENTS = {
 export default function AppPage() {
   const [entitlements, setEntitlements] = useState(DEFAULT_ENTITLEMENTS)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const { user, signOut } = useAuth()
@@ -33,9 +32,8 @@ export default function AppPage() {
     try {
       const next = await getEntitlements()
       setEntitlements(next)
-      setError('')
-    } catch (e) {
-      setError(e.message || 'Unable to load entitlements.')
+    } catch {
+      // Fall back to free-tier defaults so the app still loads.
     } finally {
       setLoading(false)
     }
@@ -71,16 +69,10 @@ export default function AppPage() {
       })
   }, [location.search, navigate, user])
 
-  const blockingState = useMemo(() => {
-    if (loading) return 'Loading workspace...'
-    if (error) return error
-    return ''
-  }, [loading, error])
-
-  if (blockingState) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="ink-panel rounded-xl p-5 text-[#0c3348] text-sm">{blockingState}</div>
+        <div className="ink-panel rounded-xl p-5 text-[#0c3348] text-sm">Loading workspace...</div>
       </div>
     )
   }

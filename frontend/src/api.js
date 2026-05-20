@@ -8,18 +8,24 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'https://web-production-656fd.
 
 async function request(method, path, body = null, timeoutMs = 10000) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  const timer = setTimeout(() => controller.abort(new Error('Request timed out')), timeoutMs)
   try {
     const accessToken = getApiAccessToken()
     const headers = { 'Content-Type': 'application/json' }
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`
 
-    const res = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body !== null ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    })
+    let res
+    try {
+      res = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body !== null ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      })
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Request timed out')
+      throw err
+    }
 
     if (!res.ok) {
       let detail = `${res.status} ${res.statusText}`
