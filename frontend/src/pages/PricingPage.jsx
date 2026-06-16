@@ -13,14 +13,14 @@ export default function PricingPage() {
   const [cadence, setCadence] = useState('monthly')
   const [workingPlan, setWorkingPlan] = useState('')
   const [error, setError] = useState('')
-  const [billingReady, setBillingReady] = useState(BILLING_ENV_ENABLED)
+  const [billingReady, setBillingReady] = useState(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
 
   useEffect(() => {
     let active = true
-    if (!user || !BILLING_ENV_ENABLED) return () => {}
+    if (!user) return () => {}
     getEntitlements()
       .then((data) => {
         if (!active) return
@@ -47,7 +47,7 @@ export default function PricingPage() {
       return
     }
 
-    if (!billingReady) {
+    if (billingReady === false) {
       setError('Billing is not configured yet. Set billing env vars and Stripe prices to enable checkout.')
       return
     }
@@ -105,7 +105,7 @@ export default function PricingPage() {
             {banner}
           </p>
         )}
-        {!billingReady && (
+        {billingReady === false && (
           <p className="mt-4 text-sm text-amber-200 bg-amber-900/45 border border-amber-300/40 rounded-lg px-3 py-2 inline-block">
             Paid checkout is currently disabled until billing configuration is complete.
           </p>
@@ -142,7 +142,7 @@ export default function PricingPage() {
               <button
                 className="mt-5 px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-semibold disabled:opacity-60"
                 onClick={() => handleChoose(plan.id)}
-                disabled={isWorking || (!billingReady && plan.id !== 'free')}
+                disabled={isWorking || (billingReady === false && plan.id !== 'free')}
               >
                 {isWorking ? 'Redirecting...' : plan.cta}
               </button>
